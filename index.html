@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Work Hour Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             box-sizing: border-box;
@@ -94,6 +95,14 @@
             background-color: #2980b9;
         }
 
+        .btn-update {
+            background-color: #2ecc71;
+        }
+
+        .btn-update:hover {
+            background-color: #27ae60;
+        }
+
         .records-section h2 {
             margin-bottom: 15px;
             color: #2c3e50;
@@ -121,6 +130,33 @@
 
         tr:last-child td {
             border-bottom: none;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-icon {
+            cursor: pointer;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+
+        .edit-icon {
+            color: #3498db;
+        }
+
+        .edit-icon:hover {
+            color: #2980b9;
+        }
+
+        .delete-icon {
+            color: #e74c3c;
+        }
+
+        .delete-icon:hover {
+            color: #c0392b;
         }
 
         .pagination {
@@ -162,6 +198,11 @@
             
             th, td {
                 padding: 8px 10px;
+            }
+            
+            .actions-cell {
+                flex-direction: column;
+                gap: 5px;
             }
         }
     </style>
@@ -206,6 +247,7 @@
                             <th>Time Start</th>
                             <th>Time End</th>
                             <th>Total Hours</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="records-body">
@@ -221,178 +263,6 @@
         </div>
     </div>
 
-    <script>
-        // DOM elements
-        const dateInput = document.getElementById('date');
-        const timeStartInput = document.getElementById('time-start');
-        const timeEndInput = document.getElementById('time-end');
-        const totalHoursInput = document.getElementById('total-hours');
-        const submitBtn = document.getElementById('submit-btn');
-        const recordsBody = document.getElementById('records-body');
-        const noRecordsMsg = document.getElementById('no-records');
-        const paginationContainer = document.getElementById('pagination');
-
-        // Set today's date as default
-        const today = new Date();
-        dateInput.valueAsDate = today;
-
-        // Constants
-        const MAX_RECORDS_PER_PAGE = 10;
-        const MAX_TOTAL_RECORDS = 120;
-        let currentPage = 1;
-
-        // Load records from localStorage or initialize empty array
-        let records = JSON.parse(localStorage.getItem('workRecords')) || [];
-
-        // Calculate total hours when time inputs change
-        timeStartInput.addEventListener('change', calculateTotalHours);
-        timeEndInput.addEventListener('change', calculateTotalHours);
-
-        function calculateTotalHours() {
-            if (timeStartInput.value && timeEndInput.value) {
-                const startTime = new Date(`1970-01-01T${timeStartInput.value}`);
-                const endTime = new Date(`1970-01-01T${timeEndInput.value}`);
-                
-                // Handle case where end time is on the next day
-                if (endTime < startTime) {
-                    endTime.setDate(endTime.getDate() + 1);
-                }
-                
-                const diffMs = endTime - startTime;
-                const diffHours = diffMs / (1000 * 60 * 60);
-                
-                totalHoursInput.value = diffHours.toFixed(2);
-            } else {
-                totalHoursInput.value = '';
-            }
-        }
-
-        // Submit new record
-        submitBtn.addEventListener('click', function() {
-            // Validate inputs
-            if (!dateInput.value || !timeStartInput.value || !timeEndInput.value) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            // Create new record
-            const newRecord = {
-                id: Date.now(), // Simple unique ID
-                date: dateInput.value,
-                timeStart: timeStartInput.value,
-                timeEnd: timeEndInput.value,
-                totalHours: totalHoursInput.value
-            };
-            
-            // Add to beginning of array (newest first)
-            records.unshift(newRecord);
-            
-            // Limit to 120 records
-            if (records.length > MAX_TOTAL_RECORDS) {
-                records = records.slice(0, MAX_TOTAL_RECORDS);
-            }
-            
-            // Save to localStorage
-            localStorage.setItem('workRecords', JSON.stringify(records));
-            
-            // Reset form
-            dateInput.valueAsDate = today;
-            timeStartInput.value = '';
-            timeEndInput.value = '';
-            totalHoursInput.value = '';
-            
-            // Refresh display
-            displayRecords();
-        });
-
-        // Display records with pagination
-        function displayRecords() {
-            // Hide/show no records message
-            if (records.length === 0) {
-                noRecordsMsg.style.display = 'block';
-                recordsBody.innerHTML = '';
-                paginationContainer.innerHTML = '';
-                return;
-            } else {
-                noRecordsMsg.style.display = 'none';
-            }
-            
-            // Calculate pagination
-            const totalPages = Math.ceil(records.length / MAX_RECORDS_PER_PAGE);
-            const startIndex = (currentPage - 1) * MAX_RECORDS_PER_PAGE;
-            const endIndex = Math.min(startIndex + MAX_RECORDS_PER_PAGE, records.length);
-            const pageRecords = records.slice(startIndex, endIndex);
-            
-            // Clear table body
-            recordsBody.innerHTML = '';
-            
-            // Add records to table
-            pageRecords.forEach(record => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${formatDate(record.date)}</td>
-                    <td>${record.timeStart}</td>
-                    <td>${record.timeEnd}</td>
-                    <td>${record.totalHours}</td>
-                `;
-                recordsBody.appendChild(row);
-            });
-            
-            // Generate pagination buttons
-            generatePaginationButtons(totalPages);
-        }
-
-        // Format date for display (YYYY-MM-DD to MM/DD/YYYY)
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
-        }
-
-        // Generate pagination buttons
-        function generatePaginationButtons(totalPages) {
-            paginationContainer.innerHTML = '';
-            
-            if (totalPages <= 1) return;
-            
-            // Previous button
-            const prevButton = document.createElement('button');
-            prevButton.textContent = 'Previous';
-            prevButton.disabled = currentPage === 1;
-            prevButton.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    displayRecords();
-                }
-            });
-            paginationContainer.appendChild(prevButton);
-            
-            // Page buttons
-            for (let i = 1; i <= totalPages; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.textContent = i;
-                pageButton.classList.toggle('active', i === currentPage);
-                pageButton.addEventListener('click', () => {
-                    currentPage = i;
-                    displayRecords();
-                });
-                paginationContainer.appendChild(pageButton);
-            }
-            
-            // Next button
-            const nextButton = document.createElement('button');
-            nextButton.textContent = 'Next';
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.addEventListener('click', () => {
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    displayRecords();
-                }
-            });
-            paginationContainer.appendChild(nextButton);
-        }
-
-        // Initial display
-        displayRecords();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
