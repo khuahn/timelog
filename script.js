@@ -1,5 +1,3 @@
-// script.js
-
 // DOM elements
 const dateInput = document.getElementById('date');
 const timeStartInput = document.getElementById('time-start');
@@ -12,7 +10,8 @@ const paginationContainer = document.getElementById('pagination');
 
 // Set today's date as default
 const today = new Date();
-dateInput.valueAsDate = today;
+const todayFormatted = today.toISOString().split('T')[0];
+dateInput.value = todayFormatted;
 
 // Constants
 const MAX_RECORDS_PER_PAGE = 10;
@@ -116,7 +115,7 @@ function updateRecord(recordId) {
 }
 
 function resetForm() {
-    dateInput.valueAsDate = today;
+    dateInput.value = todayFormatted;
     timeStartInput.value = '';
     timeEndInput.value = '';
     totalHoursInput.value = '';
@@ -186,8 +185,8 @@ function displayRecords() {
             <td>${record.timeEnd}</td>
             <td>${record.totalHours}</td>
             <td class="actions-cell">
-                <i class="fas fa-edit edit-icon action-icon" data-id="${record.id}"></i>
-                <i class="fas fa-trash delete-icon action-icon" data-id="${record.id}"></i>
+                <i class="fas fa-edit edit-icon action-icon" data-id="${record.id}" title="Edit"></i>
+                <i class="fas fa-trash delete-icon action-icon" data-id="${record.id}" title="Delete"></i>
             </td>
         `;
         recordsBody.appendChild(row);
@@ -226,7 +225,7 @@ function generatePaginationButtons(totalPages) {
     
     // Previous button
     const prevButton = document.createElement('button');
-    prevButton.textContent = 'Previous';
+    prevButton.textContent = '←';
     prevButton.disabled = currentPage === 1;
     prevButton.addEventListener('click', () => {
         if (currentPage > 1) {
@@ -236,8 +235,11 @@ function generatePaginationButtons(totalPages) {
     });
     paginationContainer.appendChild(prevButton);
     
-    // Page buttons
-    for (let i = 1; i <= totalPages; i++) {
+    // Page buttons (show max 5 pages)
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, startPage + 4);
+    
+    for (let i = startPage; i <= endPage; i++) {
         const pageButton = document.createElement('button');
         pageButton.textContent = i;
         pageButton.classList.toggle('active', i === currentPage);
@@ -250,7 +252,7 @@ function generatePaginationButtons(totalPages) {
     
     // Next button
     const nextButton = document.createElement('button');
-    nextButton.textContent = 'Next';
+    nextButton.textContent = '→';
     nextButton.disabled = currentPage === totalPages;
     nextButton.addEventListener('click', () => {
         if (currentPage < totalPages) {
