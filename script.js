@@ -185,8 +185,10 @@ function displayRecords() {
             <td>${record.timeEnd}</td>
             <td>${record.totalHours}</td>
             <td class="actions-cell">
-                <i class="fas fa-edit edit-icon action-icon" data-id="${record.id}" title="Edit"></i>
-                <i class="fas fa-trash delete-icon action-icon" data-id="${record.id}" title="Delete"></i>
+                <div class="action-icons">
+                    <i class="fas fa-edit edit-icon action-icon" data-id="${record.id}" title="Edit"></i>
+                    <i class="fas fa-trash delete-icon action-icon" data-id="${record.id}" title="Delete"></i>
+                </div>
             </td>
         `;
         recordsBody.appendChild(row);
